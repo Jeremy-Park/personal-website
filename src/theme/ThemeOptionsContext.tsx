@@ -1,7 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect } from "react";
-import { ThemeOptions, Theme } from "@mui/material/styles";
+import { createContext, useContext, useEffect, useState } from "react";
 
 export enum ThemeName {
   DEFAULT = "default",
@@ -41,20 +40,28 @@ export function ThemeOptionsProvider({
     themeName: ThemeName.DEFAULT,
   });
 
-  // Load saved theme preferences from localStorage on mount
   useEffect(() => {
     const savedConfig = localStorage.getItem("themeConfig");
     if (savedConfig) {
-      setThemeConfig(JSON.parse(savedConfig));
+      try {
+        const parsed = JSON.parse(savedConfig);
+        if (parsed.mode && parsed.themeName) {
+          console.log("Loading saved theme config:", parsed);
+          setThemeConfig(parsed);
+        }
+      } catch (e) {
+        console.error("Failed to parse saved theme config:", e);
+      }
     }
   }, []);
 
   const toggleMode = () => {
-    // @ts-ignore
     setThemeConfig((prev) => {
+      const newMode = prev.mode === "light" ? "dark" : "light";
+      console.log("Toggling theme mode from", prev.mode, "to", newMode);
       const newConfig = {
         ...prev,
-        mode: prev.mode === "light" ? "dark" : "light",
+        mode: newMode,
       };
       localStorage.setItem("themeConfig", JSON.stringify(newConfig));
       return newConfig;
