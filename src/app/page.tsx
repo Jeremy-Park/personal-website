@@ -1,9 +1,9 @@
-import { Button } from "@mui/material";
+import MuiComponentShowcase from "@/sections/MuiComponentShowcase";
 
 export default function Home() {
   return (
     <div>
-      <Button variant="contained">hello</Button>
+      <MuiComponentShowcase />
     </div>
   );
 }
