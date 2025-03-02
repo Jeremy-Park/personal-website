@@ -1,4 +1,5 @@
 import { alpha } from "@mui/material/styles";
+import { ThemeName } from "./ThemeOptionsContext";
 
 // ----------------------------------------------------------------------
 
@@ -38,13 +39,34 @@ const GREY = {
   950: "#0A0A0A",
 };
 
-const PRIMARY = {
-  lighter: "#E8F8FD",
-  light: "#8AA7E9",
-  main: "#2C56D4",
-  dark: "#1655BE",
-  darker: "#0054A8",
-  contrastText: "#FFFFFF",
+const PRIMARY = (themeName: ThemeName) => {
+  const colors = {
+    [ThemeName.GITHUB]: {
+      lighter: "#E8F8FD",
+      light: "#8AA7E9",
+      main: "rgb(46, 103, 211)",
+      dark: "#1655BE",
+      darker: "#0054A8",
+      contrastText: "#FFFFFF",
+    },
+    [ThemeName.GLASS]: {
+      lighter: "#f09389",
+      light: "#ea6152",
+      main: "#E74C3C",
+      dark: "#ad2315",
+      darker: "#76180f",
+      contrastText: "#FFFFFF",
+    },
+    [ThemeName.VERCEL]: {
+      lighter: "#E8F8FD",
+      light: "#8AA7E9",
+      main: "rgb(0, 0, 0)",
+      dark: "rgb(0, 0, 0)",
+      darker: "rgb(0, 0, 0)",
+      contrastText: "#FFFFFF",
+    },
+  };
+  return colors[themeName];
 };
 
 const SECONDARY = {
@@ -92,30 +114,39 @@ const ERROR = {
   contrastText: "#FFFFFF",
 };
 
-const COMMON = {
-  common: { black: "#000000", white: "#FFFFFF" },
-  primary: PRIMARY,
-  secondary: SECONDARY,
-  info: INFO,
-  success: SUCCESS,
-  warning: WARNING,
-  error: ERROR,
-  grey: GREY,
-  divider: alpha(GREY[500], 0.24),
-  action: {
-    hover: alpha(GREY[500], 0.08),
-    selected: alpha(GREY[500], 0.16),
-    disabled: alpha(GREY[500], 0.8),
-    disabledBackground: alpha(GREY[500], 0.24),
-    focus: alpha(GREY[500], 0.24),
-    hoverOpacity: 0.08,
-    disabledOpacity: 0.48,
-  },
+const COMMON = (themeName: ThemeName) => {
+  const primary = PRIMARY(themeName);
+
+  return {
+    common: { black: "#000000", white: "#FFFFFF" },
+    primary: primary,
+    secondary: SECONDARY,
+    info: INFO,
+    success: SUCCESS,
+    warning: WARNING,
+    error: ERROR,
+    grey: GREY,
+    divider: alpha(GREY[500], 0.24),
+    action: {
+      hover: alpha(GREY[500], 0.08),
+      selected: alpha(GREY[500], 0.16),
+      disabled: alpha(GREY[500], 0.8),
+      disabledBackground: alpha(GREY[500], 0.24),
+      focus: alpha(GREY[500], 0.24),
+      hoverOpacity: 0.08,
+      disabledOpacity: 0.48,
+    },
+  };
 };
 
-export default function palette(themeMode: "light" | "dark") {
+export default function palette(
+  themeMode: "light" | "dark",
+  themeName: ThemeName
+) {
+  const common = COMMON(themeName);
+
   const light = {
-    ...COMMON,
+    ...common,
     mode: "light",
     text: {
       primary: GREY[800],
@@ -128,29 +159,67 @@ export default function palette(themeMode: "light" | "dark") {
       neutral: GREY[200],
     },
     action: {
-      ...COMMON.action,
+      ...common.action,
       active: GREY[600],
     },
   } as const;
 
   const dark = {
-    ...COMMON,
-    mode: "dark",
-    text: {
-      primary: "#FFFFFF",
-      secondary: GREY[500],
-      disabled: GREY[600],
+    [ThemeName.GITHUB]: {
+      ...common,
+      mode: "dark",
+      text: {
+        primary: "#FFFFFF",
+        secondary: GREY[500],
+        disabled: GREY[600],
+      },
+      background: {
+        paper: "rgb(14, 17, 22)",
+        default: "rgb(2, 4, 9)",
+        neutral: "rgb(22, 27, 34)",
+      },
+      action: {
+        ...common.action,
+        active: GREY[500],
+      },
     },
-    background: {
-      paper: GREY[950],
-      default: "#000000",
-      neutral: alpha(GREY[500], 0.16),
+    [ThemeName.GLASS]: {
+      ...common,
+      mode: "dark",
+      text: {
+        primary: "#FFFFFF",
+        secondary: GREY[500],
+        disabled: GREY[600],
+      },
+      background: {
+        paper: GREY[950],
+        default: "#000000",
+        neutral: alpha(GREY[500], 0.16),
+      },
+      action: {
+        ...common.action,
+        active: GREY[500],
+      },
     },
-    action: {
-      ...COMMON.action,
-      active: GREY[500],
+    [ThemeName.VERCEL]: {
+      ...common,
+      mode: "dark",
+      text: {
+        primary: "#FFFFFF",
+        secondary: GREY[500],
+        disabled: GREY[600],
+      },
+      background: {
+        paper: "rgb(10, 10, 10)",
+        default: "rgb(0, 0, 0)",
+        neutral: "rgb(17, 17, 17)",
+      },
+      action: {
+        ...common.action,
+        active: GREY[500],
+      },
     },
   } as const;
 
-  return themeMode === "light" ? light : dark;
+  return themeMode === "light" ? light : dark[themeName];
 }

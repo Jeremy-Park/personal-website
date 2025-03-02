@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { createTheme, ThemeProvider, CssBaseline } from "@mui/material";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import palette from "./palette";
+import ComponentOverrides from "./overrides/ComponentOverrides";
 
 export function MyThemeProvider({ children }: { children: React.ReactNode }) {
   const { mode, themeName } = useThemeOptions();
@@ -11,20 +12,12 @@ export function MyThemeProvider({ children }: { children: React.ReactNode }) {
   const theme = useMemo(
     () =>
       createTheme({
-        palette: palette(mode),
-        components: {
-          MuiCssBaseline: {
-            styleOverrides: {
-              body: {
-                backgroundColor: mode === "dark" ? "#000000" : "#FFFFFF",
-                color: mode === "dark" ? "#FFFFFF" : "#000000",
-              },
-            },
-          },
-        },
+        palette: palette(mode, themeName),
       }),
-    [mode]
+    [mode, themeName]
   );
+
+  theme.components = ComponentOverrides(theme, themeName);
 
   return (
     <AppRouterCacheProvider>

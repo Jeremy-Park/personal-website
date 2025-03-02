@@ -3,9 +3,9 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 export enum ThemeName {
-  DEFAULT = "default",
-  MODERN = "modern",
-  CLASSIC = "classic",
+  GLASS = "glass",
+  GITHUB = "github",
+  VERCEL = "vercel",
   // Add more theme names as needed
 }
 
@@ -25,7 +25,7 @@ interface ThemeConfig {
 
 const ThemeOptionsContext = createContext<ThemeContextType>({
   mode: "light",
-  themeName: ThemeName.DEFAULT,
+  themeName: ThemeName.GLASS,
   toggleMode: () => {},
   setThemeName: () => {},
 });
@@ -37,7 +37,7 @@ export function ThemeOptionsProvider({
 }) {
   const [themeConfig, setThemeConfig] = useState<ThemeConfig>({
     mode: "light",
-    themeName: ThemeName.DEFAULT,
+    themeName: ThemeName.GLASS,
   });
 
   useEffect(() => {
@@ -47,6 +47,12 @@ export function ThemeOptionsProvider({
         const parsed = JSON.parse(savedConfig);
         if (parsed.mode && parsed.themeName) {
           console.log("Loading saved theme config:", parsed);
+
+          if (!Object.values(ThemeName).includes(parsed.themeName)) {
+            setThemeConfig({ ...parsed, themeName: ThemeName.GLASS });
+            return;
+          }
+
           setThemeConfig(parsed);
         }
       } catch (e) {
@@ -58,10 +64,9 @@ export function ThemeOptionsProvider({
   const toggleMode = () => {
     setThemeConfig((prev) => {
       const newMode = prev.mode === "light" ? "dark" : "light";
-      console.log("Toggling theme mode from", prev.mode, "to", newMode);
       const newConfig = {
         ...prev,
-        mode: newMode,
+        mode: newMode as ThemeMode,
       };
       localStorage.setItem("themeConfig", JSON.stringify(newConfig));
       return newConfig;
