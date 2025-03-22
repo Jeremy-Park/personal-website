@@ -21,11 +21,11 @@ export const navConfig: NavItem[] = [
     path: PATH_DASHBOARD.realtor,
     icon: "mdi:office-building-outline",
   },
-  {
-    title: "Settings",
-    path: "/settings",
-    icon: "mdi:cog-outline",
-  },
+  // {
+  //   title: "Settings",
+  //   path: "/settings",
+  //   icon: "mdi:cog-outline",
+  // },
   {
     title: "Chat",
     path: PATH_DASHBOARD.chat,
