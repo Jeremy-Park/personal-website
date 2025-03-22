@@ -12,4 +12,5 @@ export const PATH_DASHBOARD = {
   listing: (mls: string) => path(ROOTS_DASHBOARD, `/realtor/listing/${mls}`),
   realtor: path(ROOTS_DASHBOARD, "/realtor"),
   root: ROOTS_DASHBOARD,
+  chat: path(ROOTS_DASHBOARD, "/chat"),
 };

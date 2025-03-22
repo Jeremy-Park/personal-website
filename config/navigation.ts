@@ -26,6 +26,11 @@ export const navConfig: NavItem[] = [
     path: "/settings",
     icon: "mdi:cog-outline",
   },
+  {
+    title: "Chat",
+    path: PATH_DASHBOARD.chat,
+    icon: "mdi:chat-outline",
+  },
 ];
 
 // Drawer configuration
