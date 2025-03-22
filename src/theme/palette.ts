@@ -174,7 +174,7 @@ export default function palette(
         disabled: GREY[600],
       },
       background: {
-        paper: "rgb(14, 17, 22)",
+        paper: "rgb(14, 17, 23)",
         default: "rgb(2, 4, 9)",
         neutral: "rgb(22, 27, 34)",
       },

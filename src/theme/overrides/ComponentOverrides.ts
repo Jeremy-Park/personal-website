@@ -1,9 +1,10 @@
 import { Theme } from "@mui/material";
 import { ThemeName } from "../ThemeOptionsContext";
-import MuiCssBaseline from "./MuiCssBaseline";
+import Card from "./Card";
+import Paper from "./Paper";
 
 // ----------------------------------------------------------------------
 
 export default function ComponentOverrides(theme: Theme, themeName: ThemeName) {
-  return Object.assign(MuiCssBaseline(theme, themeName));
+  return Object.assign(Card(theme, themeName), Paper(theme, themeName));
 }

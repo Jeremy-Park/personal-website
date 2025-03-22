@@ -1,23 +1,22 @@
-import React from "react";
+import Iconify from "@/components/Iconify";
 import {
-  Stack,
+  Avatar,
+  Box,
   Button,
   Card,
-  CardContent,
-  Typography,
   CardActions,
+  CardContent,
   CardHeader,
-  Avatar,
   Chip,
-  Box,
+  Divider,
   List,
   ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Divider,
+  Stack,
+  Typography,
 } from "@mui/material";
-import Iconify from "@/components/Iconify";
 const MuiComponentShowcase = () => {
   return (
     <Stack spacing={3}>
