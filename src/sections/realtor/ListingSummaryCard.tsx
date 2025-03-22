@@ -1,22 +1,26 @@
+"use client";
 import Iconify from "@/components/Iconify";
 import { REPLIERS_CDN_BASE_URL } from "@/constants/constants";
+import { PATH_DASHBOARD } from "@/constants/paths";
 import { fCurrency } from "@/constants/utils";
-import { Listing } from "@/types/repliers";
+import { addFavorite } from "@/queries/repliers";
+import { SimpleListing } from "@/types/repliers";
 import { fToNow } from "@/utils/formatTime";
 import {
   Card,
+  CardActionArea,
   CardContent,
   CardMedia,
-  Divider,
   IconButton,
   Stack,
   Typography,
 } from "@mui/material";
+import Link from "next/link";
 
 // ----------------------------------------------------------------------
 
 type Props = {
-  listing: Listing;
+  listing: SimpleListing;
 };
 
 // ----------------------------------------------------------------------
@@ -81,103 +85,108 @@ const ListingSummaryCard = ({ listing }: Props) => {
       return "N/A";
     }
 
-    // const date = new Date(listing.listDate);
-
-    // return date.toLocaleDateString("en-US", {
-    //   month: "long",
-    //   day: "numeric",
-    //   year: "numeric",
-    // });
-
     return fToNow(listing.listDate);
+  };
+
+  const handleAddFavorite = () => {
+    try {
+      addFavorite(listing.mlsNumber);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
     <Card>
-      {/* Image */}
-      <CardMedia
-        component="img"
-        image={`${REPLIERS_CDN_BASE_URL}/${listing.images?.[0]}`}
-      />
+      <CardActionArea
+        component={Link}
+        href={PATH_DASHBOARD.listing(listing.mlsNumber)}
+      >
+        {/* Image */}
+        <CardMedia
+          component="img"
+          image={`${REPLIERS_CDN_BASE_URL}/${listing.images?.[0]}`}
+        />
 
-      <CardContent>
-        <Stack spacing={3}>
-          {/* Address and Price */}
-          <Stack
-            alignItems="start"
-            direction="row"
-            justifyContent="space-between"
-            spacing={1}
-          >
-            <Stack>
-              <Typography sx={{ color: "primary.main" }} variant="h5">
-                {fCurrency(listing.listPrice)}
-              </Typography>
-              <Typography variant="body2">{handleAddressText()}</Typography>
+        <CardContent>
+          <Stack spacing={3}>
+            {/* Address and Price */}
+            <Stack
+              alignItems="start"
+              direction="row"
+              justifyContent="space-between"
+              spacing={1}
+            >
+              <Stack>
+                <Typography sx={{ color: "primary.main" }} variant="h5">
+                  {fCurrency(listing.listPrice)}
+                </Typography>
+                <Typography variant="body2">{handleAddressText()}</Typography>
+              </Stack>
+
+              <IconButton onClick={handleAddFavorite}>
+                <Iconify icon="mdi:heart" />
+              </IconButton>
             </Stack>
 
-            <IconButton>
-              <Iconify icon="mdi:heart" />
-            </IconButton>
+            {/* Features */}
+            <Stack
+              direction="row"
+              // divider={<Divider orientation="vertical" flexItem />}
+              spacing={2}
+              justifyContent="space-around"
+            >
+              {/* Bedrooms */}
+              <Stack alignItems="center">
+                <Stack direction="row" spacing={1}>
+                  <Iconify color="text.secondary" icon="mdi:bed" />
+                  <Typography color="text.secondary" variant="body2">
+                    {handleBedroomsText()}
+                  </Typography>
+                </Stack>
+                <Typography color="text.secondary" variant="caption">
+                  Beds
+                </Typography>
+              </Stack>
+
+              {/* Bathrooms */}
+              <Stack alignItems="center">
+                <Stack direction="row" spacing={1}>
+                  <Iconify color="text.secondary" icon="mdi:shower" />
+                  <Typography color="text.secondary" variant="body2">
+                    {handleBathroomsText()}
+                  </Typography>
+                </Stack>
+                <Typography color="text.secondary" variant="caption">
+                  Bathrooms
+                </Typography>
+              </Stack>
+
+              {/* Sqft */}
+              <Stack alignItems="center">
+                <Stack direction="row" spacing={1}>
+                  <Iconify color="text.secondary" icon="mdi:home-outline" />
+                  <Typography color="text.secondary" variant="body2">
+                    {handleSqftText()}
+                  </Typography>
+                </Stack>
+                <Typography color="text.secondary" variant="caption">
+                  Square Feet
+                </Typography>
+              </Stack>
+            </Stack>
+
+            {/* Date Added */}
+            <Typography color="text.secondary" variant="caption">
+              {handleDateText()}
+            </Typography>
           </Stack>
 
-          {/* Features */}
-          <Stack
-            direction="row"
-            // divider={<Divider orientation="vertical" flexItem />}
-            spacing={2}
-            justifyContent="space-around"
-          >
-            {/* Bedrooms */}
-            <Stack alignItems="center">
-              <Stack direction="row" spacing={1}>
-                <Iconify color="text.secondary" icon="mdi:bed" />
-                <Typography color="text.secondary" variant="body2">
-                  {handleBedroomsText()}
-                </Typography>
-              </Stack>
-              <Typography color="text.secondary" variant="caption">
-                Beds
-              </Typography>
-            </Stack>
-
-            {/* Bathrooms */}
-            <Stack alignItems="center">
-              <Stack direction="row" spacing={1}>
-                <Iconify color="text.secondary" icon="mdi:shower" />
-                <Typography color="text.secondary" variant="body2">
-                  {handleBathroomsText()}
-                </Typography>
-              </Stack>
-              <Typography color="text.secondary" variant="caption">
-                Bathrooms
-              </Typography>
-            </Stack>
-
-            {/* Sqft */}
-            <Stack alignItems="center">
-              <Stack direction="row" spacing={1}>
-                <Iconify color="text.secondary" icon="mdi:home-outline" />
-                <Typography color="text.secondary" variant="body2">
-                  {handleSqftText()}
-                </Typography>
-              </Stack>
-              <Typography color="text.secondary" variant="caption">
-                Square Feet
-              </Typography>
-            </Stack>
-          </Stack>
-
-          {/* Date Added */}
-          <Typography color="text.secondary" variant="caption">
-            {handleDateText()}
-          </Typography>
-        </Stack>
-
-        {/* <Typography variant="body1">
+          {/* <Typography variant="body1">
           {JSON.stringify(listing, null, 2)}
         </Typography> */}
-      </CardContent>
+        </CardContent>
+      </CardActionArea>
     </Card>
   );
 };

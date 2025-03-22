@@ -2,7 +2,6 @@
 import LoadingSection from "@/components/LoadingSection";
 import PageHeader from "@/components/PageHeader";
 import { useListings } from "@/hooks/repliers";
-import { Listing } from "@/types/repliers";
 import { Grid2, Stack } from "@mui/material";
 import ListingSummaryCard from "./ListingSummaryCard";
 
@@ -25,7 +24,7 @@ const ListingsSection = () => {
       {/* Listings */}
       {listings.data && (
         <Grid2 container spacing={3}>
-          {listings.data.listings.map((listing: Listing) => (
+          {listings.data.listings.map((listing) => (
             <Grid2
               key={`listing-card-${listing.mlsNumber}`}
               size={{ xs: 12, sm: 6, md: 4 }}

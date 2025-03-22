@@ -1,8 +1,9 @@
+import { MyQueryClientProvider } from "@/provider/MyQueryClientProvider";
 import { MyThemeProvider } from "@/theme/MyThemeProvider";
 import { ThemeOptionsProvider } from "@/theme/ThemeOptionsContext";
 import type { Metadata } from "next";
 import "./globals.css";
-import { MyQueryClientProvider } from "@/provider/MyQueryClientProvider";
+import Navbar from "@/sections/nav/Navbar";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -19,7 +20,9 @@ export default function RootLayout({
       <body>
         <MyQueryClientProvider>
           <ThemeOptionsProvider>
-            <MyThemeProvider>{children}</MyThemeProvider>
+            <MyThemeProvider>
+              <Navbar>{children}</Navbar>
+            </MyThemeProvider>
           </ThemeOptionsProvider>
         </MyQueryClientProvider>
       </body>

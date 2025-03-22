@@ -1,3 +1,4 @@
+"use client";
 import ListingsSection from "@/sections/realtor/ListingsSection";
 import { Container } from "@mui/material";
 
