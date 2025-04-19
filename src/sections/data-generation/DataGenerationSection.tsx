@@ -138,7 +138,7 @@ const DataGenerationSection = () => {
   return (
     <Stack spacing={3}>
       {/* AI Instructions */}
-      <Card>
+      {/* <Card>
         <CardHeader
           subheader="Copy these instructions and paste to your LLM of choice."
           title="AI Instructions"
@@ -151,7 +151,7 @@ const DataGenerationSection = () => {
             Copy
           </Button>
         </CardActions>
-      </Card>
+      </Card> */}
 
       {/* Parse Conversation */}
       <Card>
