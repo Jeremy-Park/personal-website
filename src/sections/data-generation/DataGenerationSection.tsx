@@ -29,6 +29,19 @@ type GeneratedFile = {
   type: string;
 };
 
+/**
+ * Escapes all Unicode characters in a string
+ * @param str - The string to escape
+ * @returns The escaped string
+ */
+function escapeUnicode(str: string): string {
+  return str.replace(/[\s\S]/g, (c) => {
+    return c.charCodeAt(0) > 127
+      ? "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4)
+      : c;
+  });
+}
+
 const DataGenerationSection = () => {
   const { copy } = useCopyToClipboard();
 
@@ -89,12 +102,17 @@ const DataGenerationSection = () => {
     // Generate file name
     const fileName = `${parsedName}_${date}_${turnLength}`;
 
-    // Generate JSONL content - ensure UTF-8 compatible
+    // Generate JSONL content with escaped Unicode
     const jsonlContent = parsedConversations
-      .map((conv) => JSON.stringify({ text: conv.join("\n") }))
+      .map((conv) => {
+        // Create JSON object with text field
+        const jsonObj = { text: conv.join("\n") };
+        // Stringify and escape Unicode characters
+        return escapeUnicode(JSON.stringify(jsonObj));
+      })
       .join("\n");
 
-    // Generate TXT content - ensure UTF-8 compatible
+    // Generate TXT content - no need to escape Unicode
     const txtContent = parsedConversations
       .map((conv) => conv.join("\n"))
       .join("\n" + "=".repeat(80) + "\n");
@@ -138,7 +156,7 @@ const DataGenerationSection = () => {
   return (
     <Stack spacing={3}>
       {/* AI Instructions */}
-      <Card>
+      {/* <Card>
         <CardHeader
           subheader="Copy these instructions and paste to your LLM of choice."
           title="AI Instructions"
@@ -151,7 +169,7 @@ const DataGenerationSection = () => {
             Copy
           </Button>
         </CardActions>
-      </Card>
+      </Card> */}
 
       {/* Parse Conversation */}
       <Card>
