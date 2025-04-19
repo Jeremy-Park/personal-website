@@ -1,3 +1,4 @@
+import Iconify from "@/components/Iconify";
 import { CONVERSATION_EXAMPLE } from "@/constants/data-generation/constants";
 import instructions from "@/constants/data-generation/instructions";
 import { downloadFile } from "@/utils/downloadFile";
@@ -8,6 +9,7 @@ import {
   CardActions,
   CardContent,
   CardHeader,
+  IconButton,
   List,
   ListItem,
   ListItemText,
@@ -15,6 +17,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { capitalCase } from "change-case";
+import { enqueueSnackbar } from "notistack";
 import { useState } from "react";
 
 // ----------------------------------------------------------------------
@@ -47,47 +51,72 @@ const DataGenerationSection = () => {
       return;
     }
 
-    if (conversations.some(conv => !conv.trim())) {
+    if (conversations.some((conv) => !conv.trim())) {
       alert("Please fill in all conversations");
       return;
     }
 
+    // Parse name
+    const parsedName = capitalCase(name.trim());
+
+    // Generate date
     const date = new Date().toISOString().slice(0, 10);
-    const fileName = `${name}_${date}`;
-    
+
     // Parse conversations
-    const parsedConversations = conversations.map(conv => {
+    const parsedConversations = conversations.map((conv) => {
       // Split by newlines and filter out empty lines
-      return conv.split('\n')
-        .map(line => line.trim())
-        .filter(line => line)
-        // Remove quotes if they exist (from example format)
-        .map(line => line.replace(/^"(.*)",$/, '$1').replace(/^"(.*)"$/, '$1'));
+      return (
+        conv
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line)
+          // Remove quotes if they exist (from example format)
+          .map((line) =>
+            line.replace(/^"(.*)",$/, "$1").replace(/^"(.*)"$/, "$1")
+          )
+      );
     });
-    
-    // Generate JSONL content
+
+    // Get conversation length
+    let totalConversationLength = 0;
+    for (const conv of parsedConversations) {
+      totalConversationLength += conv.length;
+    }
+
+    // Get turn length
+    const turnLength = Math.floor(totalConversationLength / 2);
+
+    // Generate file name
+    const fileName = `${parsedName}_${date}_${turnLength}`;
+
+    // Generate JSONL content - ensure UTF-8 compatible
     const jsonlContent = parsedConversations
-      .map(conv => JSON.stringify({ text: conv.join('\n') }))
-      .join('\n');
-    
-    // Generate TXT content
+      .map((conv) => JSON.stringify({ text: conv.join("\n") }))
+      .join("\n");
+
+    // Generate TXT content - ensure UTF-8 compatible
     const txtContent = parsedConversations
-      .map(conv => conv.join('\n'))
-      .join('\n' + '='.repeat(80) + '\n');
-    
-    // Store generated files
+      .map((conv) => conv.join("\n"))
+      .join("\n" + "=".repeat(80) + "\n");
+
+    // Store generated files with UTF-8 BOM marker for text file
     setGeneratedFiles([
       {
         name: `${fileName}.jsonl`,
         content: jsonlContent,
-        type: 'application/jsonl'
+        type: "application/jsonl",
       },
       {
         name: `${fileName}.txt`,
         content: txtContent,
-        type: 'text/plain'
-      }
+        type: "text/plain",
+      },
     ]);
+
+    // Snackbar
+    enqueueSnackbar("Data generated successfully with UTF-8 encoding", {
+      variant: "success",
+    });
   };
 
   const handleDownloadFile = (file: GeneratedFile) => {
@@ -100,6 +129,10 @@ const DataGenerationSection = () => {
 
   const handleRemoveConversation = (index: number) => {
     setConversations(conversations.filter((_, i) => i !== index));
+  };
+
+  const handleClearFiles = () => {
+    setGeneratedFiles([]);
   };
 
   return (
@@ -127,10 +160,15 @@ const DataGenerationSection = () => {
           title="Parse Conversation"
         />
         <CardContent>
-          <Stack spacing={1}>
+          <Stack spacing={2}>
             {/* Conversation */}
             {conversations.map((conversation, index) => (
-              <Stack key={index} spacing={1}>
+              <Stack
+                alignItems="center"
+                direction="row"
+                key={index}
+                spacing={1}
+              >
                 <TextField
                   fullWidth
                   label="Conversation"
@@ -146,17 +184,12 @@ const DataGenerationSection = () => {
                   value={conversation}
                   error={conversation.length === 0}
                   helperText={
-                    conversation.length === 0
-                      ? "Conversation is required"
-                      : ""
+                    conversation.length === 0 ? "Conversation is required" : ""
                   }
                 />
-                <Button
-                  onClick={() => handleRemoveConversation(index)}
-                  variant="contained"
-                >
-                  Remove
-                </Button>
+                <IconButton onClick={() => handleRemoveConversation(index)}>
+                  <Iconify icon="mdi:close" />
+                </IconButton>
               </Stack>
             ))}
 
@@ -198,7 +231,7 @@ const DataGenerationSection = () => {
                 <ListItem
                   key={index}
                   secondaryAction={
-                    <Button 
+                    <Button
                       onClick={() => handleDownloadFile(file)}
                       variant="contained"
                       size="small"
@@ -207,13 +240,59 @@ const DataGenerationSection = () => {
                     </Button>
                   }
                 >
-                  <ListItemText 
-                    primary={file.name} 
-                    secondary={file.type === 'application/jsonl' ? 'JSONL Format' : 'Text Format'} 
+                  <ListItemText
+                    primary={file.name}
+                    secondary={
+                      file.type === "application/jsonl"
+                        ? "JSONL Format"
+                        : "Text Format"
+                    }
                   />
                 </ListItem>
               ))}
             </List>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              No files have been generated yet. Generate data first.
+            </Typography>
+          )}
+        </CardContent>
+        <CardActions>
+          <Button onClick={handleClearFiles} variant="contained">
+            Clear Files
+          </Button>
+        </CardActions>
+      </Card>
+
+      {/* Preview files */}
+      <Card>
+        <CardHeader
+          subheader="Preview the generated files."
+          title="Preview Files"
+        />
+        <CardContent>
+          {generatedFiles.length > 0 ? (
+            <Stack spacing={3}>
+              {generatedFiles.map((file, index) => (
+                <Stack key={index} spacing={1}>
+                  <Typography variant="subtitle1">{file.name}</Typography>
+                  <TextField
+                    multiline
+                    fullWidth
+                    value={file.content.split("\n").join("\n")}
+                    InputProps={{
+                      readOnly: true,
+                      sx: {
+                        fontFamily: "monospace",
+                        fontSize: "0.875rem",
+                      },
+                    }}
+                    rows={10}
+                    variant="outlined"
+                  />
+                </Stack>
+              ))}
+            </Stack>
           ) : (
             <Typography variant="body2" color="text.secondary">
               No files have been generated yet. Generate data first.

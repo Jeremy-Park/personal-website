@@ -10,8 +10,8 @@ export const downloadFile = (
   fileName: string,
   contentType = 'text/plain'
 ): void => {
-  // Create a blob with the content
-  const blob = new Blob([content], { type: contentType });
+  // Create a blob with the content and explicitly set UTF-8 encoding
+  const blob = new Blob([new TextEncoder().encode(content)], { type: `${contentType};charset=utf-8` });
   
   // Create a URL for the blob
   const url = URL.createObjectURL(blob);
