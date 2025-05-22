@@ -1,5 +1,6 @@
 import { Alert, Box, Paper, Stack, Typography } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { io, Socket } from "socket.io-client"; // Import Socket.IO client
 import ChatInterface from "./ChatInterface";
 import { useListings } from "@/hooks/repliers";
 import { SimpleListing } from "@/types/repliers";
@@ -19,6 +20,139 @@ export default function ChatSection() {
   const [isBotTyping, setIsBotTyping] = useState(false);
 
   const [selectedListings, setSelectedListings] = useState<SimpleListing[]>([]);
+  const socketRef = useRef<Socket | null>(null); // Use Socket type from socket.io-client
+
+  useEffect(() => {
+    // Connect to Socket.IO server
+    // It's often better to use the same protocol as the http server, 
+    // but ws://localhost:3001 explicitly uses WebSocket.
+    socketRef.current = io("ws://localhost:3001", {
+      transports: ["websocket"], // Ensure WebSocket transport is used
+      // You might need to add withCredentials: true if your server uses cookies/sessions
+    });
+    const socket = socketRef.current;
+
+    socket.on("connect", () => {
+      console.log("Connected to Socket.IO server with ID:", socket.id);
+      // Example: Send a test message upon connection if needed
+      // socket.emit("test_message", { info: "Client connected" });
+    });
+
+    // Handle standard chat bot responses (full or streamed)
+    const handleBotResponse = (serverData: any) => {
+      if (serverData.type === 'fullBotResponse') {
+        setIsBotTyping(false);
+        const botMessage: Message = {
+          text: serverData.text,
+          isUser: false,
+          timestamp: new Date(),
+          listings: serverData.listings,
+        };
+        setMessages((prev) => [...prev, botMessage]);
+      } else if (serverData.type === 'streamChunk') {
+        setIsBotTyping(true);
+        setMessages((prevMessages) => {
+          const lastMessage = prevMessages.length > 0 ? prevMessages[prevMessages.length - 1] : null;
+          if (lastMessage && !lastMessage.isUser && !serverData.isFinalChunkOfNewStream) { // isFinalChunkOfNewStream is a hypothetical flag you might add
+            const updatedMessages = [...prevMessages];
+            const currentBotMessage = updatedMessages[prevMessages.length - 1];
+            updatedMessages[prevMessages.length - 1] = {
+              ...currentBotMessage,
+              text: currentBotMessage.text + serverData.textDelta,
+              listings: serverData.listings || currentBotMessage.listings,
+              timestamp: new Date(),
+            };
+            return updatedMessages;
+          } else {
+            const newBotMessage: Message = {
+              text: serverData.textDelta,
+              isUser: false,
+              timestamp: new Date(),
+              listings: serverData.listings,
+            };
+            return [...prevMessages, newBotMessage];
+          }
+        });
+        if (serverData.isFinal) {
+          setIsBotTyping(false);
+        }
+      }
+    };
+
+    socket.on("bot_response", handleBotResponse); // Generic event for bot chat messages
+
+    // Listen for specific events from your example
+    socket.on("test_response", (data) => {
+      console.log("Received 'test_response':", data);
+      const botMessage: Message = {
+        text: `Test Response: ${JSON.stringify(data)}`,
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, botMessage]);
+      setIsBotTyping(false);
+    });
+
+    socket.on("weather_forecast", (data) => {
+      console.log("Received 'weather_forecast':", data);
+      const botMessage: Message = {
+        text: `Weather Forecast: ${JSON.stringify(data)}`,
+        isUser: false,
+        timestamp: new Date(),
+        // Assuming data might contain listings, adjust as needed
+        // listings: data.listings
+      };
+      setMessages((prev) => [...prev, botMessage]);
+      setIsBotTyping(false);
+    });
+
+    socket.on("weather_error", (errorData) => {
+      console.error("Received 'weather_error':", errorData);
+      const errorMessage: Message = {
+        text: `Weather Error: ${JSON.stringify(errorData)}`,
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      setIsBotTyping(false);
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.log("Disconnected from Socket.IO server:", reason);
+      const closeMessage: Message = {
+        text: "Disconnected from server. Attempting to reconnect...",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, closeMessage]);
+      setIsBotTyping(false);
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("Socket.IO connection error:", error);
+      const errorMessage: Message = {
+        text: "Connection error. Please check the server and your connection.",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      setIsBotTyping(false);
+    });
+
+    return () => {
+      if (socket) {
+        console.log("Disconnecting Socket.IO client...");
+        socket.off("connect");
+        socket.off("disconnect");
+        socket.off("connect_error");
+        socket.off("bot_response", handleBotResponse);
+        socket.off("test_response");
+        socket.off("weather_forecast");
+        socket.off("weather_error");
+        socket.disconnect();
+      }
+    };
+  }, []); // Empty dependency array ensures this runs once on mount and cleanup on unmount
 
   const handleSelectListing = (listing: SimpleListing) => {
     setSelectedListings((prev) => [...prev, listing]);
@@ -31,47 +165,43 @@ export default function ChatSection() {
   };
 
   const handleSendMessage = (text: string) => {
-    // Add user message
     const userMessage: Message = {
       text,
       isUser: true,
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, userMessage]);
-
-    // Show typing indicator
     setIsBotTyping(true);
 
-    // Simulate bot response after random delay between 2-4 seconds
-    const delay = Math.random() * 2000 + 2000; // Random delay between 2-4 seconds
-    setTimeout(() => {
-      const botMessage: Message = {
-        text: "Here are some properties that might interest you.",
+    if (socketRef.current && socketRef.current.connected) {
+      const socket = socketRef.current;
+      try {
+        const parsedInput = JSON.parse(text);
+        if (parsedInput && typeof parsedInput.type === 'string' && typeof parsedInput.payload !== 'undefined') {
+          // Emitting a custom event based on parsedInput.type
+          console.log(`Emitting custom event '${parsedInput.type}' with payload:`, parsedInput.payload);
+          socket.emit(parsedInput.type, parsedInput.payload); 
+        } else {
+          // Not a structured command, send as a generic chat input
+          console.log("Emitting 'chatInput' with payload:", { text, selectedListings });
+          socket.emit("chatInput", { text, selectedListings });
+        }
+      } catch (error) {
+        // Not a valid JSON string, send as generic chat input
+        console.log("Emitting 'chatInput' (input was not valid JSON) with payload:", { text, selectedListings });
+        socket.emit("chatInput", { text, selectedListings });
+      }
+    } else {
+      console.error("Socket.IO is not connected.");
+      const errorMessage: Message = {
+        text: "Not connected to the server. Please try again.",
         isUser: false,
         timestamp: new Date(),
       };
+      setMessages((prev) => [...prev, errorMessage]);
       setIsBotTyping(false);
-      setMessages((prev) => [...prev, botMessage]);
-    }, delay);
-
-    // Show typing indicator
-    setIsBotTyping(true);
-
-    // Simulate listings
-    const delay2 = Math.random() * 2000 + 2000; // Random delay between 2-4 seconds
-    setTimeout(() => {
-      const botMessage: Message = {
-        text: "Here are some properties that might interest you.",
-        isUser: false,
-        timestamp: new Date(),
-        listings: listings.data?.listings.slice(
-          selectedListings.length,
-          selectedListings.length + 2
-        ),
-      };
-      setIsBotTyping(false);
-      setMessages((prev) => [...prev, botMessage]);
-    }, delay2);
+    }
+    // Bot response is handled by socket event listeners
   };
 
   return (
