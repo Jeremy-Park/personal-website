@@ -1,4 +1,3 @@
-import { SimpleListing } from "@/types/repliers";
 import { Icon } from "@iconify/react";
 import {
   Box,
@@ -9,30 +8,23 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
-import ChatListingCard from "./ChatListingCard";
 import { Message } from "./ChatSection";
 import TypingIndicator from "./TypingIndicator";
 
 // ----------------------------------------------------------------------
 
 interface ChatInterfaceProps {
-  selectedListings: SimpleListing[];
   messages: Message[];
   onSendMessage: (text: string) => void;
   isBotTyping: boolean;
-  onSelectListing: (listing: SimpleListing) => void;
-  onDeselectListing: (listing: SimpleListing) => void;
 }
 
 // ----------------------------------------------------------------------
 
 export default function ChatInterface({
-  selectedListings,
   messages,
   onSendMessage,
   isBotTyping,
-  onSelectListing,
-  onDeselectListing,
 }: ChatInterfaceProps) {
   const [inputText, setInputText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -106,8 +98,8 @@ export default function ChatInterface({
                 {message.timestamp.toLocaleTimeString()}
               </Typography>
 
-              {/* Listings */}
-              {message.listings && (
+              {/* Listings - REMOVED */}
+              {/* {message.listings && (
                 <Stack direction="row" spacing={1}>
                   {message.listings.map((listing) => (
                     <ChatListingCard
@@ -119,7 +111,7 @@ export default function ChatInterface({
                     />
                   ))}
                 </Stack>
-              )}
+              )} */}
             </Paper>
           </Box>
         ))}
